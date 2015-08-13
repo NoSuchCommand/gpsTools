@@ -9,16 +9,10 @@ Vagrant.require_version ">= 1.5.2"
 $setupscript = <<END
 echo "192.168.250.5  master.example.com master" >> /etc/hosts
 echo "192.168.250.10 client.example.com client" >> /etc/hosts
-#echo 'supercede domain-name "example.com";' > /etc/dhcp/dhclient.conf
-#sed -i '/search/ d;$ a\search example.com' /etc/resolv.conf
-#sed -ri 's/^[#\s]*(UseDNS)\s+yes.*/\1 no/' /etc/ssh/sshd_config
-#service sshd restart
-exit 0
 END
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "puppetlabs/centos-6.6-64-nocm"
-  #config.vm.box = "puppetlabs/centos-7.0-64-nocm"
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--natdnsproxy1", "off"]
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "off"]
@@ -38,20 +32,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     puppetmaster.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "4096"]
       vb.customize ["modifyvm", :id, "--cpus", "4"]
+      # The following is mandatory when alloting more than 1 vCPU
       vb.customize ["modifyvm", :id, "--ioapic", "on"]
     end
     puppetmaster.vm.hostname = "master.example.com"
     puppetmaster.vm.network :private_network, ip: "192.168.250.5"
     puppetmaster.vm.provision "shell", inline: $setupscript
   end
-
-  ## Puppet Server
-  #config.vm.define "puppetserver", autostart: false do |puppetserver|
-  #  puppetserver.vm.hostname = "puppet-server.example.com"
-  #  puppetserver.vm.network :private_network, ip: "192.168.250.6"
-  #  puppetserver.vm.provision "shell", inline: $setupscript
-  #  puppetserver.vm.provider :virtualbox do |ps|
-  #    ps.memory = 1024
-  #  end
-  #end
 end
