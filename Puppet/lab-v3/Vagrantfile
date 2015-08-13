@@ -7,8 +7,8 @@ Vagrant.require_version ">= 1.5.2"
 
 # Copy files into place
 $setupscript = <<END
-echo "192.168.250.5  puppetmaster.example.com puppetmaster" >> /etc/hosts
-echo "192.168.250.10 client.example.com       client"       >> /etc/hosts
+echo "192.168.250.5  master.example.com master" >> /etc/hosts
+echo "192.168.250.10 client.example.com client" >> /etc/hosts
 #echo 'supercede domain-name "example.com";' > /etc/dhcp/dhclient.conf
 #sed -i '/search/ d;$ a\search example.com' /etc/resolv.conf
 #sed -ri 's/^[#\s]*(UseDNS)\s+yes.*/\1 no/' /etc/ssh/sshd_config
@@ -34,13 +34,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   # A puppetmaster
-  config.vm.define "puppetmaster", autostart: false do |puppetmaster|
+  config.vm.define "master", autostart: false do |puppetmaster|
     puppetmaster.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "4096"]
       vb.customize ["modifyvm", :id, "--cpus", "4"]
       vb.customize ["modifyvm", :id, "--ioapic", "on"]
     end
-    puppetmaster.vm.hostname = "puppetmaster.example.com"
+    puppetmaster.vm.hostname = "master.example.com"
     puppetmaster.vm.network :private_network, ip: "192.168.250.5"
     puppetmaster.vm.provision "shell", inline: $setupscript
   end
