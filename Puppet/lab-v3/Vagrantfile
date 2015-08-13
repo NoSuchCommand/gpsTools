@@ -9,6 +9,8 @@ Vagrant.require_version ">= 1.5.2"
 $setupscript = <<END
 echo "192.168.250.5  master.example.com master" >> /etc/hosts
 echo "192.168.250.10 client.example.com client" >> /etc/hosts
+service ntpd start
+chkconfig ntpd on
 END
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
