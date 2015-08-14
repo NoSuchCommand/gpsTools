@@ -42,5 +42,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     puppetmaster.vm.network :forwarded_port, guest:443,  host: 1443
     puppetmaster.vm.network :forwarded_port, guest:3000, host: 13000
     puppetmaster.vm.provision "shell", inline: $setupscript
+    puppetmaster.vm.provision "shell", inline: "lokkit -p 443:tcp"
+    puppetmaster.vm.provision "shell", inline: "lokkit -p 3000:tcp"
+    puppetmaster.vm.provision "shell", inline: "lokkit -p 8140:tcp"
+    puppetmaster.vm.provision "shell", inline: "lokkit -p 61613:tcp"
   end
 end
