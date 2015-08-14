@@ -11,6 +11,9 @@ echo "192.168.250.5  master.example.com master" >> /etc/hosts
 echo "192.168.250.10 client.example.com client" >> /etc/hosts
 service ntpd start
 chkconfig ntpd on
+tar xf /vagrant/files/vim.tar -C ~root
+tar xf /vagrant/files/vim.tar -C ~vagrant
+chown -R vagrant: ~vagrant/.vim{,rc}
 END
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
