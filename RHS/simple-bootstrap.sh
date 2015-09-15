@@ -80,7 +80,7 @@ done
 # register your server
 printf "==> INFO: Registering into Spacewalk...\n"
 printf "==> INFO: Keys = ${keys}...\n"
-/usr/sbin/rhnreg_ks --activationkey=${keys}
+/usr/sbin/rhnreg_ks --activationkey=${keys} --force
 yum -q clean all
 
 # install all necessary packages
