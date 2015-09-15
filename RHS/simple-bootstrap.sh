@@ -66,7 +66,7 @@ sed -i -e 's/^# Proxy.*//g' /etc/yum.conf
 
 # get Satellite SSL certificate
 curl -s http://${mysat}/pub/${ssl_cert_rpm} -o /tmp/${ssl_cert_rpm}
-yum -q -y install /tmp/${ssl_cert_rpm}
+yum -q -y --nogpgcheck install /tmp/${ssl_cert_rpm}
 
 # set serverURL and sslCACert to appropriate values
 sed -i -e "s,serverURL=.*,serverURL=https://${mysat}/XMLRPC,g" /etc/sysconfig/rhn/up2date
