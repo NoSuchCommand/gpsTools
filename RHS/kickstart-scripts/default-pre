@@ -1,0 +1,217 @@
+### Kickstart profile-wide variables
+#-- Organization identifier
+o=$org
+
+#raw
+#-- Template start markup - DO NOT REMOVE
+
+#-- main function
+main() {
+############################# EDIT FROM HERE #################################
+:
+#-- This editable section may be used to perform pre-installation tasks.
+#-- The Red Hat installer "anaconda" is not yet started so everything here
+#-- is done in memory. You may use it to discover hardware, ask questions on
+#-- the screen (sample code for it below) or even to generate kickstart stanzas
+#-- on the fly (remember to include the generated stanzas in your kickstart
+#-- file using the %include directive). If you are also using the STARTX
+#-- default-nochroot post-script, you may write shell-style variable
+#-- definitions in the file /tmp/parameters in order to pass information to
+#-- the post-installation.
+
+######## Example of pre-installation survey #########
+######-- Uncomment as needed
+
+## getscreen # allows for curses boxes to appear on the screen
+## getkeymap # keymap selection
+##
+## # Get input from the operator on the screen
+## hostname=$(valid_input "FQDN" valid_fqdn)
+## ipaddress=$(valid_input "IP Address" valid_ip)
+## netmask=$(valid_input "Netmask" valid_ip)
+## gateway=$(valid_input "Gateway" valid_ip)
+## dnsservers=$(valid_input "DNS Servers" valid_dns)
+## 
+## # You may then use the values either as variables (sourced in post scripts) :
+## parameters=/tmp/parameters
+## printf "hostname=%s"   "$hostname"   >> $parameters
+## printf "ipaddress=%s"  "$ipaddress"  >> $parameters
+## printf "netmask=%s"    "$netmask"    >> $parameters
+## printf "gateway=%s"    "$gateway"    >> $parameters
+## printf "dnsservers=%s" "$dnsservers" >> $parameters
+## 
+## # Or as a includable kickstart stanza (%include /tmp/netparams) :
+## netparams=/tmp/netparams
+## printf "network --device=eth0 --bootproto=static" >> $netparams
+## printf " --onboot=yes"                            >> $netparams
+## printf " --hostname=%s" "$hostname"               >> $netparams
+## printf " --ip=%s"       "$ipaddress"              >> $netparams
+## printf " --netmask=%s"  "$netmask"                >> $netparams
+## printf " --gateway=%s"  "$gateway"                >> $netparams
+## for dns in $dnsservers; do
+##     printf " --nameserver=%s" "$dns"              >> $netparams
+## done
+
+############################# EDIT TILL HERE #################################
+}
+
+### Functions
+
+#-- Name : valid_fqdn()
+#-- Returns true if the string passed as an argument
+#-- is a correctly formatted FQDN, else false
+#-- Arguments : fully qualified domain name
+function valid_fqdn() {
+    local retval=0
+
+    [ -n "$1" ] &&                               \
+    [[ "$1" =~ ^([a-z0-9_-]+\.){2,}[a-z]+$ ]] || \
+        retval=1
+
+    return $retval
+}
+
+#-- Name : valid_ip()
+#-- Returns true if the string passed as an argument is a
+#-- correctly formatted dotted decimal IP address, else false
+#-- Arguments : dotted decimal IPv4 address
+function valid_ip() {
+    local retval=0
+
+    [ -n "$1" ] &&                                 \
+    [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] && \
+    while IFS=. read a b c d; do
+        ((0 <= a)) && ((a <= 255))              && \
+        ((0 <= b)) && ((b <= 255))              && \
+        ((0 <= c)) && ((c <= 255))              && \
+        ((0 <= d)) && ((d <= 255))
+    done <<<"$1"                                || \
+        retval=1
+
+    return $retval
+}
+
+#-- Name : valid_dns()
+#-- Returns true if the string passed as an argument is a space
+#-- separated list of one to three dotted decimal IP addresses
+#-- Arguments : string of 1 to 3 dotted decimal IPv4 address
+function valid_dns() {
+    local retval=0
+
+    [ -z "$1" ] && {
+        printf "usage: valid_dns '<dns1> [<dns2> [<dns3>]]'\n"
+        return 1
+    }
+
+    typeset -i count=0
+    for dns in $@; do
+        count+=1
+        valid_ip "$dns" && ((count <= 3)) || {
+            retval=1
+            break
+        }
+    done
+
+    return $retval
+}
+
+#-- Name : valid_input()
+#-- Keeps presenting a whiptail input box on the screen
+#-- until the user has entered a valid value. The final
+#-- value is printed on standard output. This function
+#-- should always return true except for wrong arguments
+#-- or external error.
+#-- Arguments :
+#--   1 - (string)  title for the box
+#--   2 - (word)    validation function name
+#--   3 - (integer) OPTIONAL height of the box
+#--   4 - (integer) OPTIONAL width of the box
+#--   5 - (string)  OPTIONAL display text
+#--   6 - (string)  OPTIONAL failure/retry message
+function valid_input() {
+    local title= function=
+    local text= retry="Invalid input. Please try again."
+    local height=8 width=50
+    local value= invalid=1
+
+    #-- Sanity checks
+    [ $# -ge 2 ]                        && \
+    [[ "$(type -t $2)" == 'function' ]] || {
+        printf "usage: valid_input <title> <function> "
+        printf "[<height> [<width> [<text> [<retry>]]]]\n"
+        return 1
+    }
+    title="$1"
+    function="$2"
+
+    #-- Optional parameters
+    [[ "$3" =~ ^[0-9]+$ ]] && height=$3
+    [[ "$4" =~ ^[0-9]+$ ]] && width=$4
+    [ -n "$5" ]            && text="$5"
+    [ -n "$6" ]            && retry="$6"
+
+    while [ $invalid -ne 0 ]; do
+        invalid=0
+        value=$(whiptail --title "$title"                  \
+                         --nocancel                        \
+                         --inputbox "$text" $height $width \
+                         3>&1 >&2 2>&3
+                         )
+
+        #-- Check input
+        if ! $function "$value"; then
+            whiptail --title "Error"           \
+                     --ok-button "Retry"       \
+                     --msgbox "$retry" 8 40 >&2
+            invalid=1
+        fi
+    done
+    printf "$value"
+}
+
+#-- Name : getscreen()
+#-- Performs I/O redirections so that the screen
+#-- is available for input
+#-- Arguments : None
+function getscreen() {
+    mkdir /tmp/gotscreen || return 1
+    local tty=$(tty)
+    exec 240>&1 241>&2
+    exec > $tty 2> $tty
+    clear
+}
+
+#-- Name : putscreen()
+#-- Performs I/O redirections so that the screen
+#-- is no longer available for input
+#-- Arguments : None
+function putscreen() {
+    [ -d /tmp/gotscreen ] || return 1
+    exec >&240- 2>&241-
+    rmdir /tmp/gotscreen
+    clear
+}
+
+#-- Name : getkeymap()
+#-- Presents a whiptail radio list on the screen for
+#-- the user to chose the keymap
+#-- Arguments : None
+function getkeymap() {
+    local keyboard
+    keyboard=$(whiptail --title "Keyboard mapping"                      \
+                        --nocancel                                      \
+                        --radiolist "Select a keyboard mapping" 10 50 2 \
+                        us "U.S English" on                             \
+                        fr "French"      off                            \
+                        3>&1 >&2 2>&3
+                        )
+    if [ -n "$keyboard" ]; then
+        loadkeys $keyboard
+    fi
+}
+
+#-- execute
+main
+
+#-- Template end markup - DO NOT REMOVE
+#endraw

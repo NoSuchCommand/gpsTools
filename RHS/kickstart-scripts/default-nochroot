@@ -1,0 +1,65 @@
+### Kickstart profile-wide variables
+#-- Organization identifier
+o=$org
+
+#raw
+#-- Template start markup - DO NOT REMOVE
+
+#-- main function
+main() {
+############################# EDIT FROM HERE #################################
+:
+#-- This editable section may be used to perform non chrooted post-installation
+#-- tasks. Use /mnt/sysimage/ to access the root of the installed system. If
+#-- you need to activate the system with one or more activation keys, you may
+#-- populate the $keys variable with a SPACE SEPARATED list of their names.
+#-- The /tmp/parameters generated during pre-installation is also sourced so
+#-- you may use the defined variables here.
+
+############################# EDIT TILL HERE #################################
+}
+
+### Functions
+#-- Name : add_key()
+#-- Builds the list of activation keys to use for registration
+#-- by adding the one passed as an argument
+#-- Arguments : name of the activation key to add to the list
+function add_key() {
+    local sep= org=
+    local key=/mnt/sysimage/tmp/key
+    [ -n "$o" ] && org="${o}-"
+
+    [ $# -eq 1 ] || {
+        printf "usage: add_key [<orgid>-]<keyname>\n"
+        return 1
+    }
+
+    [ -f $key ] || touch $key
+    [ "$(wc -c < $key)" != "0" ] && sep=','
+
+    printf "%s%s%s" "$sep" "$org" "$1" >> $key
+}
+
+### Variables
+#-- Target system's root path
+t=/mnt/sysimage
+
+### Main
+#-- Copy and include pre-script generated configuration variables
+if [ -f /tmp/parameters ]; then
+    cp /tmp/parameters $t/tmp
+    . $t/tmp/parameters
+fi
+
+#-- execute
+main
+
+#-- Let's add each key to the registration list
+if [ -n "$keys" ]; then
+    for key in ${keys}; do
+        add_key $key
+    done
+fi
+
+#-- Template end markup - DO NOT REMOVE
+#endraw
