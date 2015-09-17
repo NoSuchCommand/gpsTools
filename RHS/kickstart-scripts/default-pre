@@ -34,11 +34,11 @@ main() {
 ## 
 ## # You may then use the values either as variables (sourced in post scripts) :
 ## parameters=/tmp/parameters
-## printf "hostname=%s"   "$hostname"   >> $parameters
-## printf "ipaddress=%s"  "$ipaddress"  >> $parameters
-## printf "netmask=%s"    "$netmask"    >> $parameters
-## printf "gateway=%s"    "$gateway"    >> $parameters
-## printf "dnsservers=%s" "$dnsservers" >> $parameters
+## printf "hostname='%s'\n"   "$hostname"   >> $parameters
+## printf "ipaddress='%s'\n"  "$ipaddress"  >> $parameters
+## printf "netmask='%s'\n"    "$netmask"    >> $parameters
+## printf "gateway='%s'\n"    "$gateway"    >> $parameters
+## printf "dnsservers='%s'\n" "$dnsservers" >> $parameters
 ## 
 ## # Or as a includable kickstart stanza (%include /tmp/netparams) :
 ## netparams=/tmp/netparams
