@@ -21,7 +21,7 @@ function service7() {
 	systemctl $1 $service
 }
 
-osver=$(sed -r 's#^[a-zA-Z ]+([0-9]).*#\1#' /etc/redhat-release)
+osver=$(sed -r 's#^[a-zA-Z ]+([0-9]+).*#\1#' /etc/redhat-release)
 [[ "$osver" =~ ^[0-9]$ ]] || {
 	mylog "ERREUR: Plateforme non supportee"
 	exit 1
