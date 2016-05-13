@@ -64,8 +64,8 @@ main() {
 function valid_fqdn() {
     local retval=0
 
-    [ -n "$1" ] &&                               \
-    [[ "$1" =~ ^([a-z0-9_-]+\.){2,}[a-z]+$ ]] || \
+    [ -n "$1" ]                               &&
+    [[ "$1" =~ ^([a-z0-9_-]+\.){2,}[a-z]+$ ]] ||
         retval=1
 
     return $retval
@@ -78,14 +78,14 @@ function valid_fqdn() {
 function valid_ip() {
     local retval=0
 
-    [ -n "$1" ] &&                                 \
-    [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] && \
+    [ -n "$1" ]                                 &&
+    [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] &&
     while IFS=. read a b c d; do
-        ((0 <= a)) && ((a <= 255))              && \
-        ((0 <= b)) && ((b <= 255))              && \
-        ((0 <= c)) && ((c <= 255))              && \
+        ((0 <= a)) && ((a <= 255))              &&
+        ((0 <= b)) && ((b <= 255))              &&
+        ((0 <= c)) && ((c <= 255))              &&
         ((0 <= d)) && ((d <= 255))
-    done <<<"$1"                                || \
+    done <<<"$1"                                ||
         retval=1
 
     return $retval
@@ -129,13 +129,13 @@ function valid_dns() {
 #--   5 - (string)  OPTIONAL display text
 #--   6 - (string)  OPTIONAL failure/retry message
 function valid_input() {
-    local title= function=
-    local text= retry="Invalid input. Please try again."
+    local title function
+    local text retry="Invalid input. Please try again."
     local height=8 width=50
-    local value= invalid=1
+    local value invalid=1
 
     #-- Sanity checks
-    [ $# -ge 2 ]                        && \
+    [ $# -ge 2 ]                        &&
     [[ "$(type -t $2)" == 'function' ]] || {
         printf "usage: valid_input <title> <function> "
         printf "[<height> [<width> [<text> [<retry>]]]]\n"

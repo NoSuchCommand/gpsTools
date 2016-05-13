@@ -25,7 +25,7 @@ main() {
 #-- by adding the one passed as an argument
 #-- Arguments : name of the activation key to add to the list
 function add_key() {
-    local sep= org=
+    local sep org
     local key=/mnt/sysimage/tmp/key
     [ -n "$o" ] && org="${o}-"
 
