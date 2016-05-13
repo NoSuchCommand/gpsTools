@@ -9,7 +9,7 @@ export LANG=C PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 function usage() {
     local prog=$(basename $0)
-    printf "$prog 0.1 - Creates a new PersistentVolume in OpenShift\n"
+    printf "$prog 0.0.1 - Creates a new PersistentVolume in OpenShift\n"
     printf "Usage: $prog <name> <size>\n"
     printf "\n"
     printf "Arguments:\n"
