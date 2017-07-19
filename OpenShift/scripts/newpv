@@ -9,7 +9,7 @@ export LANG=C PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 function usage() {
     local prog=$(basename $0)
-    printf "$prog 0.0.1 - Creates a new PersistentVolume in OpenShift\n"
+    printf "$prog 0.0.2 - Creates a new PersistentVolume in OpenShift\n"
     printf "Usage: $prog <name> <size>\n"
     printf "\n"
     printf "Arguments:\n"
@@ -114,7 +114,7 @@ function confirm_pv() {
     local name=$1 size=$2
 
     > /dev/null oc patch pv $name -p \
-            $(printf '{"spec": {"capacity": {"storage": "%di"}}}' $size)
+            "$(printf '{"spec": {"capacity": {"storage": "%si"}}}' $size)"
 }
 
 function cancel_pv() {
