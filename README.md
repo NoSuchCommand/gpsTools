@@ -12,7 +12,7 @@ following guidelines.
 ### Commit content
 
 One commit should only span an atomic and coherent set of related changes. **Do
-not** use commits as a way to "backup" your work at the end of the day. Pefer
+not** use commits as a way to "backup" your work at the end of the day. Prefer
 either working iteratively between each commit or sorting and splitting your
 changes into smaller atomic commits. If needed, learn how to use `git add
 --patch` and/or `git add -i` to achieve this.
