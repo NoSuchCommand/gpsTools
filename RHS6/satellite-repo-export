@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# Exporting all the existing repositories
+#
+# Default location for exports is /var/lib/pulp/katello-export
+#
+# Content can be published to consumers through HTTP by symlinking
+# the export location to /var/www/html/pub/export
+#
+# Then point your consumer to http://external.satellite/pub/export
+#
+# For more details on ISS, see the Content Management Guide for Satellite 6
+#
+# Make sure that the configuration file for hammer is set. For instance:
+#     # cat /root/.hammer/cli_config.yml
+#     :foreman:
+#       :username: admin
+#       :password: supersecret
+#
+# Daily export can be scheduled using cron prior to consumption :
+#     # cat /etc/cron.d/satellite
+#     00 02  *  *  * root /usr/local/sbin/satellite-iss-export
+#
+
+#-- Config
+ORG=DIRISI
+EXPORTDIR=/var/lib/pulp/katello-export
+LOG=/var/log/foreman/repo-export.log
+DATEFMT='%b %e %H:%M:%S'
+#--
+
+export PATH=/usr/sbin:/usr/bin
+export LANG=en_US.UTF-8
+LOCK=/tmp/sat-export.lock
+exec &>>"$LOG"
+
+printf '#########################################'
+printf '#########################################'
+printf '\n'
+
+mkdir "$LOCK" || {
+    printf 'Existing lock %s found. Aborting...\n' "$LOCK"
+    exit 255
+}
+
+[ -f /root/.hammer/cli_config.yml ] || {
+    printf '/root/.hammer/cli_config.yml: hammer configuration file missing'
+    exit 1
+}
+
+[[ "$1" =~ ^[0-9]+$ ]] || {
+    printf 'Usage: %s REPO_ID\n' "$0"
+    exit 2
+}
+
+repoinfo=$(hammer --csv repository info --id "$1") || {
+    printf 'repository %s not found\n' "$1"
+    exit 3
+}
+
+#-- Export the repository
+tail -n +2 <<<"$repoinfo" |
+while IFS=, read id name garbage; do
+    printf '%s ~~ REPO %s START (%s)\n' "$(date +"$DATEFMT")" "$id" "$name"
+    hammer repository export --id "$id"
+    printf '%s ~~ REPO %s DONE\n' "$(date +"$DATEFMT")" "$id"
+done
+
+#-- Consolidate all the exports in the same directory
+for dir in "$EXPORTDIR"/"$ORG"-*/"$ORG"/Library; do
+    pushd "$dir" &> /dev/null && {
+        name="$(basename "${dir%/*/*}")"
+        printf '%s @@ EXTRACT %s START\n' "$(date +"$DATEFMT")" "$name"
+
+        #-- Recreate the tree
+        find . -type d -exec mkdir -p "${EXPORTDIR}/{}" \;
+
+        #-- Rebase all files
+        find . -type f -exec mv "{}" "${EXPORTDIR}/{}" \;
+
+        popd &> /dev/null
+        rm -Rf "$dir"
+        printf '%s @@ EXTRACT %s DONE\n' "$(date +"$DATEFMT")" "$name"
+    }
+done
+
+#-- Consolidation may have overwritten 'listing' files
+#-- So we recreate them with their appropriate content
+printf '%s ** POPULATE listing FILES START\n' "$(date +"$DATEFMT")"
+shopt -s extglob
+find "$EXPORTDIR"/content -type f -name listing |
+    while read f; do
+        basename -a "$(dirname "$f")"/!(listing) > "$f"
+    done
+shopt -u extglob
+printf '%s ** POPULATE listing FILES DONE\n' "$(date +"$DATEFMT")"
+
+rm -Rf "$EXPORTDIR/$ORG"-*
+chown -R --reference "$EXPORTDIR" "$EXPORTDIR/content"
+
+exit 0
