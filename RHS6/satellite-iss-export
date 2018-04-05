@@ -86,6 +86,7 @@ find "$EXPORTDIR"/content -type f -name listing |
 shopt -u extglob
 printf '%s ** POPULATE listing FILES DONE\n' "$(date +"$DATEFMT")"
 
+rm -Rf "$EXPORTDIR"/"$ORG"-*
 chown -R --reference "$EXPORTDIR" "$EXPORTDIR"/content
 
 printf '%s == EXPORT DONE\n' "$(date +"$DATEFMT")"
