@@ -31,11 +31,17 @@ DATEFMT='%b %e %H:%M:%S'
 
 export PATH=/usr/sbin:/usr/bin
 export LANG=en_US.UTF-8
+LOCK=/tmp/sat-export.lock
 exec &>>"$LOG"
 
 printf '#########################################'
 printf '#########################################'
 printf '\n'
+
+mkdir "$LOCK" || {
+    printf 'Existing lock %s found. Aborting...\n' "$LOCK"
+    exit 255
+}
 
 [ -f /root/.hammer/cli_config.yml ] || {
     printf '/root/.hammer/cli_config.yml: hammer configuration file missing'
