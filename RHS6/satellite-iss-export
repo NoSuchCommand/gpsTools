@@ -94,6 +94,7 @@ printf '%s ** POPULATE listing FILES DONE\n' "$(date +"$DATEFMT")"
 
 rm -Rf "$EXPORTDIR/$ORG"-*
 chown -R --reference "$EXPORTDIR" "$EXPORTDIR/content"
+rmdir "$LOCK"
 
 printf '%s == EXPORT DONE\n' "$(date +"$DATEFMT")"
 exit 0
