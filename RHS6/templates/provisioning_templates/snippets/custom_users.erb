@@ -1,0 +1,4 @@
+<% p_username = "sysadmin" -%>
+echo '%wheel ALL=(ALL) ALL' >> /etc/sudoers
+useradd -u 5000 -G wheel <%= p_username %>
+passwd --stdin <%= p_username %> <<<"<%= p_username %>"

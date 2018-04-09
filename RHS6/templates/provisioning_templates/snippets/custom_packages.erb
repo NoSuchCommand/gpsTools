@@ -1,0 +1,21 @@
+<%
+  os_major = @host.operatingsystem.major.to_i
+%>
+
+at
+bash-completion
+man
+man-pages
+openssh-clients
+vim-enhanced
+-rhn*
+-yum-rhn-plugin
+-ebtables*
+-iptables*
+-iwl*
+
+<% if os_major == 6 -%>
+ntp
+<% elsif os_major == 7 -%>
+-firewalld
+<% end -%>

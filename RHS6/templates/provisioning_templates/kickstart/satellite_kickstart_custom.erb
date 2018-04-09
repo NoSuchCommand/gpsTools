@@ -1,0 +1,173 @@
+<%#
+kind: provision
+name: Satellite Kickstart Custom
+oses:
+- CentOS 6
+- CentOS 7
+- RedHat 6
+- RedHat 7
+-%>
+<%
+  #-- OS release
+  rhel_compatible = @host.operatingsystem.family == 'Redhat' &&
+                    @host.operatingsystem.name   != 'Fedora'
+  os_major = @host.operatingsystem.major.to_i
+
+  #-- Puppet
+  pm_set = @host.puppetmaster.empty? ? false : true
+  puppet_enabled = pm_set || @host.params['force-puppet']
+
+  #-- Network
+  subnet = @host.subnet
+  if subnet.respond_to?(:dhcp_boot_mode?)
+    dhcp = subnet.dhcp_boot_mode? && !@static
+  else
+    dhcp = !@static
+  end
+
+  if dhcp
+    bootproto = 'dhcp'
+  else
+    bootproto = %W(
+                 static
+                 --ip=#{@host.ip}
+                 --netmask=#{subnet.mask}
+                 --gateway=#{subnet.gateway}
+                 --nameserver=#{
+                                [subnet.dns_primary,
+                                 subnet.dns_secondary].select(&:present?)
+                                                      .join(',')
+                               }
+                ).join(' ')
+  end
+
+  #-- Custom parameters
+  ntp_servers = @host.params['ntp-servers'] || '0.pool.ntp.org'
+  lang        = @host.params['lang']        || 'en_US.UTF-8'
+  keymap      = @host.params['keymap']      || 'us'
+  timezone    = @host.params['time-zone']   || 'UTC'
+-%>
+################################################################################
+#                             KICKSTART PREAMBLE                               #
+################################################################################
+install
+skipx
+text
+reboot
+<%= @mediapath %>
+lang <%= lang %>
+keyboard <%= keymap %>
+timezone --utc <%= timezone %><%= " --ntpservers=#{ntp_servers}" if (rhel_compatible and os_major == 7) %>
+selinux --enforcing
+
+rootpw --iscrypted <%= root_pass %>
+authconfig --useshadow --passalgo=sha256 --kickstart
+bootloader --location=mbr --append="nofb quiet splash=quiet" <%= grub_pass %>
+
+<%= snippet_if_exists('custom_services') if rhel_compatible -%>
+
+network --bootproto <%= bootproto %> --hostname <%= @host %><%= " --device=#{@host.mac}" if os_major >= 6 -%>
+
+################################################################################
+#                                 PARTITIONING                                 #
+################################################################################
+<% if @dynamic -%>
+%include /tmp/diskpart.cfg
+<% else -%>
+<%= @host.diskLayout %>
+<% end -%>
+
+################################################################################
+#                                   PACKAGES                                   #
+################################################################################
+%packages --ignoremissing --nobase
+@Core --nodefaults
+dhclient
+ntpdate
+wget
+yum
+<%= snippet_if_exists('custom_packages') if rhel_compatible -%>
+%end
+
+################################################################################
+#                                  SCRIPTLETS                                  #
+################################################################################
+<% if @dynamic -%>
+%pre
+<%= @host.diskLayout %>
+%end
+<% end -%>
+
+%post --nochroot --log=/mnt/sysimage/root/ks-post-nochroot.log
+cp -a /etc/resolv.conf /mnt/sysimage/etc/resolv.conf
+mkdir -p /mnt/sysimage/root/ks-logs
+
+cp /tmp/syslog /tmp/*.log /mnt/sysimage/root/ks-logs
+%end
+
+
+%post --log=/root/ks-logs/ks-post.log
+mv /root/ks-post-nochroot.log /root/ks-logs
+
+<% if subnet.respond_to?(:dhcp_boot_mode?) -%>
+<%= snippet 'custom_kickstart_networking_setup' -%>
+<% end -%>
+
+echo "Updating system time"
+/usr/sbin/ntpdate -sub <%= ntp_servers.split(',')[0] %>
+/usr/sbin/hwclock --systohc
+
+<%= snippet "custom_rhsm_registration" -%>
+
+<% if @host.info['parameters']['realm'] && @host.realm && @host.realm.realm_type == 'Red Hat Identity Management' -%>
+<%= snippet "idm_register" -%>
+<% end -%>
+
+# update all the base packages from the updates repository
+yum -t -y -e 0 update
+
+<%= snippet('custom_remote_execution_keys') -%>
+
+<% if rhel_compatible and os_major == 6 -%>
+yum -y install vmware-tools-esx-nox
+
+sed -i '/^server[[:space:]]/ d' /etc/ntp.conf
+sed -i '/^peer[[:space:]]/ d' /etc/ntp.conf
+sed -i '/^restrict.*default/ d' /etc/ntp.conf
+echo 'restrict default ignore' >> /etc/ntp.conf
+echo 'restrict -6 default ignore' >> /etc/ntp.conf
+for s in <%= ntp_servers.gsub(',', ' ') %>; do
+    echo "server $s iburst" >> /etc/ntp.conf
+    echo "restrict $s kod nomodify notrap nopeer noquery" >> /etc/ntp.conf
+done
+
+mv /root/install.log* /root/ks-logs
+<% end -%>
+
+<%= snippet_if_exists('custom_users') -%>
+
+<% if puppet_enabled -%>
+echo "Installing puppet"
+yum -t -y -e 0 install puppet
+
+echo "Configuring puppet"
+cat > /etc/puppet/puppet.conf << EOF
+<%= snippet 'puppet.conf' -%>
+EOF
+
+# Setup puppet to run on system reboot
+/sbin/chkconfig --level 345 puppet on
+
+/usr/bin/puppet agent --config /etc/puppet/puppet.conf -o --tags no_such_tag <%= @host.puppetmaster.blank? ? '' : "--server #{@host.puppetmaster}" %> --no-daemonize
+<% end -%>
+
+sync
+
+<% if @provisioning_type == nil || @provisioning_type == 'host' -%>
+# Inform the build system that we are done.
+echo "Informing Foreman that we are built"
+wget -q -O /dev/null --no-check-certificate <%= foreman_url %>
+<% end -%>
+exit 0
+
+%end
