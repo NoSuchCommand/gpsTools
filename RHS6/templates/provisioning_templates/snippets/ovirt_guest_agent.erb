@@ -1,0 +1,4 @@
+virt-what |grep -q rhev && {
+    yum -y install ovirt-guest-agent-common
+    systemctl enable ovirt-guest-agent
+}
