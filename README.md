@@ -27,6 +27,17 @@ Further guidelines about good staging habits can be found by reading
 [this section](https://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#_commit_guidelines)
 of the online Pro Git book.
 
+### Commit author
+
+Your commits should be properly identified with your STARTX name and email
+address so please locally configure you working copy of this repository with
+these two informations using `git config`:
+
+```
+git config user.name 'FirstName Name'
+git config user.email 'me@startx.fr'
+```
+
 ### Commit messages
 
 First read [this blog post](https://chris.beams.io/posts/git-commit/) about how
