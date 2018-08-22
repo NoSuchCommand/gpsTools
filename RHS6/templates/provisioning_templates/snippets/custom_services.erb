@@ -1,0 +1,8 @@
+<%
+  os_major = @host.operatingsystem.major.to_i
+%>
+<% if os_major == 6 -%>
+services --disabled=iptables,ip6tables --enabled=ntpd,atd
+<% elsif os_major == 7 -%>
+services --disabled=network,NetworkManager-wait-online
+<% end -%>

@@ -1,0 +1,175 @@
+#!/bin/bash
+###############################################################################
+# Script name : newpv                                                         #
+# Author      : Fabien Malfoy <fm@startx.fr>                                  #
+# Comment     : Helper script to create a new NFS backed PersistentVolume     #
+#               on OpenShift                                                  #
+###############################################################################
+export LANG=C PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+function usage() {
+    local prog=$(basename $0)
+    printf "$prog 0.0.2 - Creates a new PersistentVolume in OpenShift\n"
+    printf "Usage: $prog <name> <size>\n"
+    printf "\n"
+    printf "Arguments:\n"
+    printf "  - name   Name of the PV/share/directory\n"
+    printf "           underscores and alphanumeric characters only\n"
+    printf "  - size   Size of the PV/share\n"
+    printf "           amount with suffix M, G or T\n"
+}
+
+function valid_size() {
+    #-- Sanity check
+    [ $# -eq 1 ]              &&
+    [[ $1 =~ ^[0-9]+[MGT]$ ]] || return 1
+
+    local retval=0
+    local free=$(vgs --noheadings --nosuffix \
+                        --units ${1: -1} -o vg_free exports)
+
+    (( ${1::-1} <= ${free%.*} )) || {
+        printf "Not enough space left in VG exports. "
+        printf "Consider extending it.\n"
+        retval=2
+    }
+    return $retval
+}
+
+function unique_nfs() {
+    #-- Sanity check
+    [ $# -eq 1 ] &&
+    [[ $1 =~ ^[a-zA-Z0-9_]+$ ]] || return 1
+
+    [ -e /var/export/$1 ]              ||
+    [ -e /dev/exports/$1 ]             ||
+    [ -e /etc/exports.d/${1}.exports ] && {
+        printf "The NFS share '${1}' seems to already exist.\n"
+        printf "Check the following components : "
+        printf "mountpoint, device, export\n"
+    }
+    return 0
+}
+
+function create_nfs() {
+    #-- Sanity check
+    [ $# -eq 2 ]                &&
+    [[ $1 =~ ^[a-zA-Z0-9_]+$ ]] &&
+    [[ $2 =~ ^[0-9]+[MGT]$ ]]   || return 1
+
+    local name=$1 size=$2 vg=exports mntpt=/var/export/$1
+
+    unique_nfs $name || return 2
+    valid_size $size || return 3
+
+    lvcreate -n $name -L $size $vg > /dev/null   &&
+    mkfs -t xfs /dev/$vg/$name     > /dev/null   &&
+    mkdir $mntpt                   > /dev/null   &&
+    printf "/dev/%s/%s %s xfs defaults 1 2\n" \
+           $vg $name                          \
+           $mntpt                             \
+                                   >> /etc/fstab &&
+    mount -a                       > /dev/null   &&
+    restorecon -RF   $mntpt        > /dev/null   &&
+    chown nfsnobody: $mntpt        > /dev/null   &&
+    chmod 0700       $mntpt        > /dev/null   &&
+    printf "%s *(rw,sync,all_squash)\n" \
+           $mntpt                       \
+                > /etc/exports.d/${name}.exports &&
+    exportfs -r                    > /dev/null   || return 4
+
+    return 0
+}
+
+function reserve_pv() {
+    #-- Sanity check
+    [ $# -eq 1 ]                &&
+    [[ $1 =~ ^[a-zA-Z0-9_]+$ ]] || return 1
+
+    local name=$1 nfs=$(hostname -f)
+
+    oc create -f - > /dev/null <<-EOF
+	apiVersion: v1
+	kind: PersistentVolume
+	metadata:
+	  name: $name
+	spec:
+	  capacity:
+	    storage: 0
+	  accessModes:
+	  - ReadWriteMany
+	  nfs:
+	    path: /var/export/$name
+	    server: $nfs
+	  persistentVolumeReclaimPolicy: Retain
+	EOF
+}
+
+function confirm_pv() {
+    #-- Sanity check
+    [ $# -eq 2 ]                &&
+    [[ $1 =~ ^[a-zA-Z0-9_]+$ ]] &&
+    [[ $2 =~ ^[0-9]+[MGT]$ ]]   || return 1
+
+    local name=$1 size=$2
+
+    > /dev/null oc patch pv $name -p \
+            "$(printf '{"spec": {"capacity": {"storage": "%si"}}}' $size)"
+}
+
+function cancel_pv() {
+    #-- Sanity check
+    [ $# -eq 1 ]                &&
+    [[ $1 =~ ^[a-zA-Z0-9_]+$ ]] || return 1
+
+    oc delete pv $1 &> /dev/null
+}
+
+function errors(){
+    printf "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+    printf "The command exited with the errors above.\n"
+    exit 127
+}
+
+function cleanup() {
+    rmdir $lockdir
+}
+trap cleanup EXIT
+
+#-- Lock actions
+lockdir=/var/lock/newpv
+mkdir $lockdir &> /dev/null || {
+    printf "Locking directory '${lockdir}' detected. "
+    printf "Aborting.\n"
+    exit 255
+}
+
+#-- Must be root
+[ "$EUID" -eq 0 ] || {
+    printf "This program must be run as the superuser. "
+    printf "Aborting.\n"
+    exit 254
+}
+
+#-- Arguments sanity check
+[ $# -eq 2 ]                &&
+[[ $1 =~ ^[a-zA-Z0-9_]+$ ]] &&
+[[ $2 =~ ^[0-9]+[MGT]$ ]]   || {
+    usage
+    exit 2
+}
+
+oc login -u system:admin &> /dev/null &&
+oc project default       &> /dev/null || {
+    printf "Unable to become OpenShift 'system:admin' on project 'default'. "
+    printf "Aborting.\n"
+    exit 253
+}
+
+name="$1"
+size="$2"
+
+reserve_pv $name       || { cancel_pv $name; errors; }
+create_nfs $name $size || { cancel_pv $name; errors; }
+confirm_pv $name $size || { cancel_pv $name; errors; }
+

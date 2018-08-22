@@ -1,0 +1,17 @@
+<%#
+kind: ptable
+name: Kickstart default nohome
+oses:
+- CentOS 5
+- CentOS 6
+- CentOS 7
+- RedHat 5
+- RedHat 6
+- RedHat 7
+-%>
+<%
+  os_major = @host.operatingsystem.major.to_i
+-%>
+zerombr
+clearpart --all --initlabel
+autopart<%= ' --nohome' if os_major == 7 %>

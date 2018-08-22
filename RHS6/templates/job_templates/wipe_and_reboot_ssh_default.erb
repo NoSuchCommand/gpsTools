@@ -1,0 +1,15 @@
+<%#
+name: Wipe and Reboot - SSH Default
+job_category: Provisioning
+description_format: "%{job_category} - %{template_name}"
+snippet: false
+provider_type: SSH
+kind: job_template
+%>
+
+at now + 1 minute <<EOF
+dd if=/dev/zero of=/dev/sda bs=1M count=20
+sync
+sync
+echo b > /proc/sysrq-trigger
+EOF

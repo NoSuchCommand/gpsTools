@@ -1,0 +1,3 @@
+05 00 * * * root /var/satellite/install-data/sh/mrepo-download-groups.sh
+10 00 * * * root /var/satellite/install-data/sh/mrepo-jboss.sh
+10 01 * * * root /var/satellite/install-data/sh/mrepo-rhel.sh

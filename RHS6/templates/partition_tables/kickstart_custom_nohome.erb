@@ -1,0 +1,18 @@
+<%#
+kind: ptable
+name: Kickstart custom nohome
+oses:
+- CentOS 5
+- CentOS 6
+- CentOS 7
+- RedHat 5
+- RedHat 6
+- RedHat 7
+-%>
+zerombr
+clearpart --all --initlabel
+part /boot --size=1024
+part pv.01 --size=1 --grow
+volgroup system pv.01 --pesize=32768
+logvol swap --vgname=system --name=swap --recommended
+logvol / --vgname=system --name=root --size=1 --grow
