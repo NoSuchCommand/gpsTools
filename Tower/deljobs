@@ -1,0 +1,57 @@
+#!/bin/bash
+###############################################################################
+# Script name : deljobs                                                       #
+# Author      : Fabien Malfoy <fm@startx.fr>                                  #
+# Comment     : Delete all jobs tied to a job template in Ansible Tower       #
+# Install     : Edit the TOWERHOST variable below to match your environment   #
+###############################################################################
+
+#-- Variables
+TOWERHOST=tower.fqdn.tld
+APIVERSION=v2
+
+#-- Input sanitization
+[[ "$1" =~ [[:digit:]]+ ]] || {
+    echo "Usage: $(basename $0) <job-template-id>"
+    echo
+    echo "Arguments:"
+    echo "    job-template-id     numeric ID of the target job template"
+    exit 1
+}
+
+#-- Check for dependencies
+deps="curl jq"
+for cmd in $deps; do
+    [[ $(type -t $cmd) == file ]] || {
+        echo "FATAL: Missing dependency '$cmd'."
+        echo "FATAL: Consider installing it before running this command again."
+        echo "Exiting..."
+        exit 2
+    }
+done
+
+#-- Functions
+function towerapi {
+    (( $# >= 1 ))    &&
+    [[ "$1" =~ ^/ ]] || return 1
+    local query="$1"
+    shift
+    curl -sk \
+         --user "$username":"$password" \
+         $@ \
+         "https://${TOWERHOST}/api/${APIVERSION}${query}"
+}
+
+#-- Main
+tplid="$1"
+tplquery=$(printf '/job_templates/%d/jobs/?page_size=1000000' "$tplid")
+
+read    -p "username: " username
+read -s -p "password: " password
+echo
+
+towerapi "$tplquery" | jq '.results[].id' |
+    while read id; do
+        echo "Deleting Job ID #${id}"
+        towerapi /jobs/${id}/ -X DELETE
+    done
