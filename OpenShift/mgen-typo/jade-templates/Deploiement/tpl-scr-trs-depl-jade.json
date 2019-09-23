@@ -1,0 +1,41 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-scr-trs-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Secret pour ajout du Truststore",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "1.0.0"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NOMSCR}"
+            },
+            "data": {
+                "mecaTrustStore.p12": "${TRUSTMECA64}"
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOMSCR",
+            "description": "Nom du secret",
+            "required": true
+        },
+        {
+            "name": "TRUSTMECA64",
+            "description": "Contenu du fichier truststore, en base64",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-scr-trs-depl-jade"
+    }
+}

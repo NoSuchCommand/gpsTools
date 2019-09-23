@@ -1,0 +1,41 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-scr-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Secret pour Pool JDBC",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NOMSCR}"
+            },
+            "stringData": {
+                "POOLPWD": "${MDPSCR}"
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOMSCR",
+            "description": "Nom du secret",
+            "required": true
+        },
+        {
+            "name": "MDPSCR",
+            "description": "Mot de passe du secret",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-scr-depl-jade"
+    }
+}

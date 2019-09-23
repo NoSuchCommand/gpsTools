@@ -1,0 +1,88 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-cfm-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour ConfigMap de projet de deploiement",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.1.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "cfm-${NOM_APPLI}-${COULOIR}"
+            },
+            "data": {
+                "SYSLOGSRV": "${SYSLOGSRV}",
+                "SYSLOGPRT": "${SYSLOGPRT}",
+                "SYSLOGFCY": "${SYSLOGFCY}",
+                "LOGLEVEL": "${LOGLEVEL}",
+                "JBOSS_LOGLEVEL": "${JBOSS_LOGLEVEL}",
+                "JBOSS_SYSLOGFCY": "${JBOSS_SYSLOGFCY}",
+                "JAVA_OPTS_APPEND": "${JAVA_OPTS_APPEND}",
+                "JAVA_MAX_MEM_RATIO": "${JAVA_MAX_MEM_RATIO}"
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir cible (ex: d01)",
+            "required": true
+        },
+        {
+            "name": "SYSLOGSRV",
+            "description": "Alias du serveur Syslog centralise (ex: knl1100.krj.gie)",
+            "required": true
+        },
+        {
+            "name": "SYSLOGPRT",
+            "description": "Port du serveur Syslog centralise",
+            "required": true
+        },
+        {
+            "name": "SYSLOGFCY",
+            "description": "Facility a utiliser pour le Syslog",
+            "required": true
+        },
+        {
+            "name": "LOGLEVEL",
+            "description": "Niveau de traces applicatifs",
+            "required": true
+        },
+        {
+            "name": "JBOSS_SYSLOGFCY",
+            "description": "Facility a utiliser pour le Syslog - Logs JBoss",
+            "required": true
+        },
+        {
+            "name": "JBOSS_LOGLEVEL",
+            "description": "Niveau de traces du serveur JBoss",
+            "required": true
+        },
+        {
+            "name": "JAVA_OPTS_APPEND",
+            "description": "Ajout d'options de JVM",
+            "required": false
+        },
+        {
+            "name": "JAVA_MAX_MEM_RATIO",
+            "description": "Ratio de memoire JBoss - OS",
+            "required": false
+        }
+    ],
+    "labels": {
+        "template": "tpl-cfm-depl-jade"
+    }
+}

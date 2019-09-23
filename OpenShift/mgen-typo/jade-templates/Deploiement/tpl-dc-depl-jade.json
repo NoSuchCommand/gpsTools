@@ -1,0 +1,374 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-dc-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour DeploymentConfig pour release JADE",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "1.7.0"
+        }
+    },
+    "objects": [
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "dc-${NOM_APPLI}-${COULOIR}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-dc-${NOM_APPLI}",
+                    "dateDepl": "${DATE_DEPL}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "resources": {
+                        "limits": {
+                          "cpu": "200m",
+                          "memory": "256Mi"
+                        },
+                        "requests": {
+                          "cpu": "200m",
+                          "memory": "256Mi"
+                        }
+                    },
+                    "type": "${STRATEGY}",
+                    "rollingParams": {
+                        "maxSurge": "${{MAX_SURGE}}",
+                        "maxUnavailable": "${{MAX_UNVBL}}"
+                    }
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "revisionHistoryLimit": "7",
+                "replicas": "${NBREPLICAS}",
+                "test": false,
+                "selector": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "deploymentconfig": "dc-${NOM_APPLI}-${COULOIR}"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "app": "app-${NOM_APPLI}-${COULOIR}",
+                            "Envir": "${ENVIRONNEMENT}",
+                            "Couloir": "${COULOIR}",
+                            "NomUL": "${NOMUL}",
+                            "VersUL": "${VERSION}",
+                            "VersSocle": "${VERSIONSOCLE}",
+                            "TypeAppli": "${TYPEAPPLI}",
+                            "DateDepl": "${DATE_DEPL}",
+                            "ImgBase": "${IMAGEBASE}",
+                            "deploymentconfig": "dc-${NOM_APPLI}-${COULOIR}",
+                            "ResQuota": "${RESQUOTA}",
+                            "LimitRange": "${LIMITRANGE}"
+                        },
+                        "annotations": {
+                            "openshift.io/generated-by": "OpenShiftNewApp"
+                        }
+                    },
+                    "spec": {
+                        "volumes": [
+                            {
+                                "name": "volimploc",
+                                "nfs": {
+                                    "path": "${NFSMNTDIR}",
+                                    "server": "${NFSNETAPPSRV}",
+                                    "readOnly": false
+                                }
+                            },
+                            {
+                                "name": "volfonts",
+                                "nfs": {
+                                    "path": "${FONTSMNTDIR}",
+                                    "server": "${FONTSNETAPPSRV}",
+                                    "readOnly": false
+                                }
+                            },
+                            {
+                                "name": "voltrustmeca",
+                                "secret": {
+                                    "secretName": "${NOMSCRTRUST}"
+                                }
+                            },
+                            {
+                                "name": "volcfgrefapp",
+                                "secret": {
+                                    "secretName": "scr-cfgref-appli"
+                                }
+                            },
+                            {
+                                "name": "volcfgrefscl",
+                                "secret": {
+                                    "secretName": "scr-cfgref-socle"
+                                }
+                            }
+                        ],
+                        "containers": [
+                            {
+                                "name": "cont-${NOM_APPLI}-${COULOIR}",
+                                "image": "${REPODOCKER}/jade/${NOM_IMAGE}:${VERSION}",
+                                "imagePullPolicy": "Always",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "name": "http",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8443,
+                                        "name": "https",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8778,
+                                        "name": "jolokia",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8888,
+                                        "name": "ping",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "volimploc",
+                                        "mountPath": "${IMPLOCMNTDIR}"
+                                    },
+                                    {
+                                        "name": "volfonts",
+                                        "mountPath": "${FONTSVOLDIR}",
+                                        "readOnly": true
+                                    },
+                                    {
+                                        "name": "voltrustmeca",
+                                        "mountPath": "/tmp/couloir_exec/truststore",
+                                        "readOnly": true
+                                    },
+                                    {
+                                        "name": "volcfgrefapp",
+                                        "mountPath": "/tmp/couloir_exec/config_referentiel_appli",
+                                        "readOnly": true
+                                    },
+                                    {
+                                        "name": "volcfgrefscl",
+                                        "mountPath": "/tmp/couloir_exec/config_referentiel_socle",
+                                        "readOnly": true
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "TZ",
+                                        "value": "Europe/Paris"
+                                    },
+                                    {
+                                        "name": "NOM_APPLI",
+                                        "value": "${NOM_APPLI}"
+                                    },
+                                    {
+                                        "name": "VERSIONUL",
+                                        "value": "${VERSION}"
+                                    },
+                                    {
+                                        "name": "COULOIR",
+                                        "value": "${COULOIR}"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "fieldPath": "metadata.namespace"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_KUBE_PING_LABELS",
+                                        "value": "app=app-${NOM_APPLI}-${COULOIR}"
+                                    },
+                                    {
+                                        "name": "MQ_CLUSTER_PASSWORD",
+                                        "value": "pwd-${NOM_APPLI}-${COULOIR}"
+                                    },
+                                    {
+                                        "name": "JGROUPS_CLUSTER_PASSWORD",
+                                        "value": "pwd-${NOM_APPLI}-${COULOIR}"
+                                    }
+                                ],
+                                "envFrom": [
+                                    {
+                                        "configMapRef": {
+                                            "name": "cfm-${NOM_APPLI}-${COULOIR}"
+                                        }
+                                    }
+                                ],
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "/opt/eap/bin/livenessProbe.sh"
+                                        ]
+                                    }
+                                },
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "/opt/eap/bin/readinessProbe.sh"
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "status": {
+                "latestVersion": 0,
+                "observedGeneration": 0,
+                "replicas": 0,
+                "updatedReplicas": 0,
+                "availableReplicas": 0,
+                "unavailableReplicas": 0
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "VERSION",
+            "description": "Version d'application",
+            "required": true
+        },
+        {
+            "name": "NOM_IMAGE",
+            "description": "Nom de l'image Docker de l'application",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir cible",
+            "required": true
+        },
+        {
+            "name": "DATE_DEPL",
+            "description": "Date et heure de deploiement",
+            "required": true
+        },
+        {
+            "name": "ENVIRONNEMENT",
+            "description": "Environnement cible de deploiement",
+            "required": true
+        },
+        {
+            "name": "NOMUL",
+            "description": "Nom de l'unite de livraison",
+            "required": true
+        },
+        {
+            "name": "VERSIONSOCLE",
+            "description": "Version du socle embarquee",
+            "required": true
+        },
+        {
+            "name": "TYPEAPPLI",
+            "description": "Type d'application (Adonis, Flex, HTML5)",
+            "required": true
+        },
+        {
+            "name": "IMPLOCMNTDIR",
+            "description": "Arborescence du point de montage dans le Pod pour les impressions locales",
+            "required": true
+        },
+        {
+            "name": "NFSMNTDIR",
+            "description": "Arborescence du point de montage NFS pour les impressions locales",
+            "required": true
+        },
+        {
+            "name": "NFSNETAPPSRV",
+            "description": "Nom du serveur de la baie NetApp pour les impressions locales",
+            "required": true
+        },
+        {
+            "name": "FONTSMNTDIR",
+            "description": "Arborescence du point de montage dans le Pod pour les fonts",
+            "required": true
+        },
+        {
+            "name": "FONTSVOLDIR",
+            "description": "Arborescence du point de montage dans le Pod pour les fonts",
+            "required": true
+        },
+        {
+            "name": "FONTSNETAPPSRV",
+            "description": "Nom du serveur de la baie NetApp pour les fonts",
+            "required": true
+        },
+        {
+            "name": "STRATEGY",
+            "description": "Strategie de demarrage de Pod",
+            "required": true
+        },
+        {
+            "name": "MAX_SURGE",
+            "description": "Max surge pour strategie Rolling",
+            "required": true
+        },
+        {
+            "name": "MAX_UNVBL",
+            "description": "Max unavailable pour strategie Rolling",
+            "required": true
+        },
+        {
+            "name": "NBREPLICAS",
+            "description": "Nombre de replicas a demarrer",
+            "required": true
+        },
+        {
+            "name": "RESQUOTA",
+            "description": "Nom du template de ResourceQuota",
+            "required": true
+        },
+        {
+            "name": "LIMITRANGE",
+            "description": "Nom du template de LimitRange",
+            "required": true
+        },
+        {
+            "name": "NOMSCRTRUST",
+            "description": "Nom du Secret pour le TrustStore",
+            "required": true
+        },
+        {
+            "name": "IMAGEBASE",
+            "description": "Image de base JBoss Eap",
+            "required": true
+        },
+        {
+            "name": "REPODOCKER",
+            "description": "URL du repository Docker",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-dc-depl-jade"
+    }
+}

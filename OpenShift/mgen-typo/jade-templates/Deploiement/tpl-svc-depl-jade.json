@@ -1,0 +1,75 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-svc-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Service pour release JADE",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "svc-${NOM_APPLI}-${COULOIR}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svc-${NOM_APPLI}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "8443-tcp",
+                        "protocol": "TCP",
+                        "port": 8443,
+                        "targetPort": 8443
+                    },
+                    {
+                        "name": "8778-tcp",
+                        "protocol": "TCP",
+                        "port": 8778,
+                        "targetPort": 8778
+                    }
+                ],
+                "selector": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "deploymentconfig": "dc-${NOM_APPLI}-${COULOIR}"
+                }
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir cible (ex: d01)",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-svc-depl-jade"
+    }
+}

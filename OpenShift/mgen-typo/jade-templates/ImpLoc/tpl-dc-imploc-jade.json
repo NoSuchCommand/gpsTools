@@ -1,0 +1,138 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-dc-imploc-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template de DeploymentConfig pour serveur Apache d'impressions locales",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "dc-imploc-${ENVIRONNEMENT}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-imploc-${ENVIRONNEMENT}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "resources": {}
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "test": false,
+                "selector": {
+                    "app": "app-imploc-${ENVIRONNEMENT}",
+                    "deploymentconfig": "dc-imploc-${ENVIRONNEMENT}"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "app": "app-imploc-${ENVIRONNEMENT}",
+                            "Envir": "${ENVIRONNEMENT}",
+                            "deploymentconfig": "dc-imploc-${ENVIRONNEMENT}"
+                        },
+                        "annotations": {
+                            "openshift.io/generated-by": "OpenShiftNewApp"
+                        }
+                    },
+                    "spec": {
+                        "volumes": [
+                                {
+                                    "name": "nfsvol",
+                                    "nfs": {
+                                        "path": "${NFSMNTDIR}",
+                                        "server": "${NFSNETAPPSRV}",
+                                        "readOnly": false
+                                    }
+                                }
+                            ],
+                            "containers": [
+                            {
+                                "name": "cont-imploc-${ENVIRONNEMENT}",
+                                "image": "docker-repository.krj.gie:5000/rhscl/httpd-24-rhel7@sha256:9616d483e4277a99bc32b5e43b255247c977abb749aa4c3ae87db3e8fc69ac74",
+                                "imagePullPolicy": "Always",
+                                "ports": [
+                                    {
+                                        "containerPort": 80,
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 443,
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8443,
+                                        "protocol": "TCP"
+                                    }
+                                ],"volumeMounts": [
+                                    {
+                                        "name": "nfsvol",
+                                        "mountPath": "${IMPLOCMNTDIR}"
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "TZ",
+                                        "value": "Europe/Paris"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "status": {
+                "latestVersion": 0,
+                "observedGeneration": 0,
+                "replicas": 0,
+                "updatedReplicas": 0,
+                "availableReplicas": 0,
+                "unavailableReplicas": 0
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "ENVIRONNEMENT",
+            "description": "Environnement cible de deploiement",
+            "required": true
+        },
+        {
+            "name": "IMPLOCMNTDIR",
+            "description": "Arborescence du point de montage dans le Pod",
+            "required": true
+        },
+        {
+            "name": "NFSMNTDIR",
+            "description": "Arborescence du point de montage NFS",
+            "required": true
+        },
+        {
+            "name": "NFSNETAPPSRV",
+            "description": "Nom du serveur de la baie NetApp",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-dc-imploc-jade"
+    }
+}

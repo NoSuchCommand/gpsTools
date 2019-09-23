@@ -1,0 +1,82 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-rtectx-sec-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Route contextualisee pour release JADE. HTTPS",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-sec-${NOM_APPLI}-${CTXROOTMIN}-${COULOIR}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svcrte-${NOM_APPLI}",
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "jade-${COULOIR}.${DOMAINEOCP}",
+                "path": "/${CTXROOT}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-${NOM_APPLI}-${COULOIR}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "insecureEdgeTerminationPolicy": "Allow",
+                    "termination": "edge"
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir cible (ex: d01)",
+            "required": true
+        },
+        {
+            "name": "DOMAINEOCP",
+            "description": "Domaine OCP de l'environnement (ex: t-caas.krj.gie)",
+            "required": true
+        },
+        {
+            "name": "CTXROOT",
+            "description": "ContextRoot de l'application",
+            "required": true
+        },
+        {
+            "name": "CTXROOTMIN",
+            "description": "ContextRoot de l'application - en minuscule",
+            "required": true
+        },
+        {
+            "name": "ENVROUTEUR",
+            "description": "Environnement du routeur (npr ou prd)",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-rtectx-sec-depl-jade"
+    }
+}

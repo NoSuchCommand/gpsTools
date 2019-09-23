@@ -1,0 +1,33 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-rq-notterm-t-s-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template de ResourceQuota NotTerminating - Test - Small",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "apiVersion": "v1",
+            "kind": "ResourceQuota",
+            "metadata": {
+                "name": "rq-notterm-t-s-jade"
+            },
+            "spec": {
+                "hard": {
+                    "pods": "1",
+                    "limits.cpu": "1",
+                    "limits.memory": "1Gi"
+                },
+                "scopes": [
+                    "NotTerminating"
+                ]
+            }
+        }
+    ]
+}

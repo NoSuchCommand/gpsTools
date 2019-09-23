@@ -1,0 +1,86 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-bc-snapic-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template de BuildConfig pour version SNAPSHOT JADE",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "1.1.0"
+        }
+    },
+    "objects": [
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "labels": {
+                    "app": "app-${NOM_APPLI}"
+                },
+                "name": "bc-${NOM_APPLI}-vrs"
+            },
+            "spec": {
+                "source": {
+                    "type": "Binary",
+                    "binary": {
+                    }
+                },
+                "completionDeadlineSeconds": "900",
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "namespace": "openshift",
+                            "name": "${IMAGE_BASE}"
+                        }
+                    }
+                },
+                "triggers": [
+                    {
+                    }
+                ],
+                "output": {
+                    "to": {
+                        "kind": "DockerImage",
+                        "name": "${REPODOCKER}/jade/${NOM_IMAGE_DEPL}:${VERSION}"
+                    }
+                },
+                "successfulBuildsHistoryLimit": "1",
+                "failedBuildsHistoryLimit": "2"
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "VERSION",
+            "description": "Version de l'image a generer",
+            "required": true
+        },
+        {
+            "name": "NOM_IMAGE_DEPL",
+            "description": "Nom de l'image Docker de deploiement",
+            "required": true
+        },
+        {
+            "name": "IMAGE_BASE",
+            "description": "Nom de l'image de base",
+            "required": true
+        },
+        {
+            "name": "REPODOCKER",
+            "description": "URL du repository Docker",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-bc-snapic-jade"
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-rq-notterm-smi-hg-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template de ResourceQuota NotTerminating - S Mineur - Hors gabarit",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "1.1.0"
+        }
+    },
+    "objects": [
+        {
+            "apiVersion": "v1",
+            "kind": "ResourceQuota",
+            "metadata": {
+                "name": "rq-notterm-smi-hg-jade"
+            },
+            "spec": {
+                "hard": {
+                    "pods": "2",
+                    "limits.cpu": "4",
+                    "limits.memory": "10Gi"
+                },
+                "scopes": [
+                    "NotTerminating"
+                ]
+            }
+        }
+    ]
+}

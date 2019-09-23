@@ -1,0 +1,175 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-rtectxind-sec-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Route contextualisee et indicee pour release JADE",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-sec-${NOM_APPLI}-${CTXROOTMIN}-${COULOIR}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svcrte-${NOM_APPLI}",
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "jade-${COULOIR}.${DOMAINEOCP}",
+                "path": "/${CTXROOT}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-${NOM_APPLI}-${COULOIR}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "insecureEdgeTerminationPolicy": "Allow",
+                    "termination": "edge"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-sec-${NOM_APPLI}-${CTXROOTMIN}-${COULOIR}-01",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svcrte-${NOM_APPLI}",
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "jade-${COULOIR}-01.${DOMAINEOCP}",
+                "path": "/${CTXROOT}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-${NOM_APPLI}-${COULOIR}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "insecureEdgeTerminationPolicy": "Allow",
+                    "termination": "edge"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-sec-${NOM_APPLI}-${CTXROOTMIN}-${COULOIR}-02",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svcrte-${NOM_APPLI}",
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "jade-${COULOIR}-02.${DOMAINEOCP}",
+                "path": "/${CTXROOT}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-${NOM_APPLI}-${COULOIR}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "insecureEdgeTerminationPolicy": "Allow",
+                    "termination": "edge"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-sec-${NOM_APPLI}-${CTXROOTMIN}-${COULOIR}-03",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}",
+                    "pmp": "pmp-svcrte-${NOM_APPLI}",
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "jade-${COULOIR}-03.${DOMAINEOCP}",
+                "path": "/${CTXROOT}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-${NOM_APPLI}-${COULOIR}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "insecureEdgeTerminationPolicy": "Allow",
+                    "termination": "edge"
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir cible (ex: d01)",
+            "required": true
+        },
+        {
+            "name": "DOMAINEOCP",
+            "description": "Domaine OCP de l'environnement (ex: t-caas.krj.gie)",
+            "required": true
+        },
+        {
+            "name": "CTXROOT",
+            "description": "ContextRoot de l'application",
+            "required": true
+        },
+        {
+            "name": "CTXROOTMIN",
+            "description": "ContextRoot de l'application - en minuscule",
+            "required": true
+        },
+        {
+            "name": "ENVROUTEUR",
+            "description": "Environnement du routeur (npr ou prd)",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-rtectxind-sec-depl-jade"
+    }
+}

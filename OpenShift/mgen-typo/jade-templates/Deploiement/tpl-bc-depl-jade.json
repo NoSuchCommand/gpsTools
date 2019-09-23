@@ -1,0 +1,92 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-bc-depl-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour BuildConfig pour deploiement de release JADE sur un couloir",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "1.2.0"
+        }
+    },
+    "objects": [
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "labels": {
+                    "app": "app-${NOM_APPLI}-${COULOIR}"
+                },
+                "name": "bc-${NOM_APPLI}-${COULOIR}"
+            },
+            "spec": {
+                "source": {
+                    "type": "Binary",
+                    "binary": {
+                    }
+                },
+                "completionDeadlineSeconds": "900",
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "${REPODOCKER}/jade/${NOM_IMAGE_SRC}:${VERSION}"
+                        },
+                        "forcePull": true
+                    }
+                },
+                "triggers": [
+                    {
+                    }
+                ],
+                "output": {
+                    "to": {
+                        "kind": "DockerImage",
+                        "name": "${REPODOCKER}/jade/${NOM_IMAGE_DEPL}:${VERSION}"
+                    }
+                },
+                "successfulBuildsHistoryLimit": "1",
+                "failedBuildsHistoryLimit": "2"
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NOM_APPLI",
+            "description": "Nom de l'application",
+            "required": true
+        },
+        {
+            "name": "VERSION",
+            "description": "Version de l'image a generer",
+            "required": true
+        },
+        {
+            "name": "NOM_IMAGE_SRC",
+            "description": "Nom de l'image Docker de la release",
+            "required": true
+        },
+        {
+            "name": "NOM_IMAGE_DEPL",
+            "description": "Nom de l'image Docker de deploiement",
+            "required": true
+        },
+        {
+            "name": "COULOIR",
+            "description": "Nom du couloir de deploiement",
+            "required": true
+        },
+        {
+            "name": "REPODOCKER",
+            "description": "URL du repository Docker",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-bc-depl-jade",
+        "xpaas": "0.0.1"
+    }
+}

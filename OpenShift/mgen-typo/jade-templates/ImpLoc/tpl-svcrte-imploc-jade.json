@@ -1,0 +1,105 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "tpl-svcrte-imploc-jade",
+        "creationTimestamp": null,
+        "annotations": {
+            "description": "Template pour Service et Route ImpLoc",
+            "iconClass": "icon-jboss",
+            "tags": "java,jboss",
+            "version": "0.0.1"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "svc-imploc-${ENVIRONNEMENT}",
+                "creationTimestamp": null,
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "80-tcp",
+                        "protocol": "TCP",
+                        "port": 80,
+                        "targetPort": 80
+                    },
+                    {
+                        "name": "443-tcp",
+                        "protocol": "TCP",
+                        "port": 443,
+                        "targetPort": 443
+                    },
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "8443-tcp",
+                        "protocol": "TCP",
+                        "port": 8443,
+                        "targetPort": 8443
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "dc-imploc-${ENVIRONNEMENT}"
+                }
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "rte-imploc-${ENVIRONNEMENT}",
+                "creationTimestamp": null,
+                "labels": {
+                    "environment": "${ENVROUTEUR}"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftNewApp"
+                }
+            },
+            "spec": {
+                "host": "imploc-${ENVIRONNEMENT}.${DOMAINEOCP}",
+                "to": {
+                    "kind": "Service",
+                    "name": "svc-imploc-${ENVIRONNEMENT}"
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "ENVIRONNEMENT",
+            "description": "Environnement cible de deploiement",
+            "required": true
+        },
+        {
+            "name": "DOMAINEOCP",
+            "description": "Domaine OCP de l'environnement (ex: t-caas.krj.gie)",
+            "required": true
+        },
+        {
+            "name": "ENVROUTEUR",
+            "description": "Environnement du routeur (npr ou prd)",
+            "required": true
+        }
+    ],
+    "labels": {
+        "template": "tpl-svcrte-depl-jade"
+    }
+}
